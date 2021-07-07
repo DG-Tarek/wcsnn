@@ -10,6 +10,7 @@ import time
 
 
 # Binary Search https://runestone.academy/runestone/books/published/pythonds/SortSearch/TheBinarySearch.html .
+# Testing modify
 def isInList(list,target):
     #Binary Search 
     left = 0
