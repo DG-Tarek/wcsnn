@@ -92,7 +92,7 @@ class Network:
             self.network_name = network_name
             self.forbidden_roots = forbidden_roots           
             self.network = []
-            self.STDP=[1,0.5,0.5,0.5]
+            self.STDP=[1,0.5,0.25,0.12,0.06,0.03,0.015]
             self.ROOTS = self.read_roots_file()
             self.creating_network()
             self.standardization()
@@ -160,7 +160,7 @@ class Network:
             if serial_number[i] not in self.forbidden_roots:
                 neuron_neighbors=[]
                 k=i+1
-                while k<i+3:
+                while k<i+6:
                     try:
                         if serial_number[k] not in self.forbidden_roots:
                             neuron_neighbors.append(serial_number[k])
@@ -199,11 +199,12 @@ class Network:
 
     # Write network pickle file (save as Matrix (in binary)).
     def write_network(self):
+        print('Writing in '+self.network_name+'.pkl')
         try:
             open_file=open(self.network_name+'.pkl', 'wb')
             pickle.dump(self.network, open_file)
             open_file.close()
-
+            print('Writing Completed')
         except:
             print(" System -> [error] Network ("+str(self.network_name)+") Creating failed!")
 
@@ -221,6 +222,7 @@ class Network:
         print("\n\n\n System -> Start learning comments ... ")
         open_file = open(self.path, "rb")
         COMMENTS = np.array(pickle.load(open_file))
+        COMMENTS = [sum(COMMENTS, [])[:200000]] 
         print(len(COMMENTS))
         open_file.close()
         start =time.time()
@@ -347,7 +349,7 @@ class Network:
 
 
 if __name__ == "__main__":
-    x=11
+    x=3
     if x==1:
         ROOTS=read_roots_file()
         # Creating a negative_network pickle file from negative_comments.pkl .
@@ -358,7 +360,7 @@ if __name__ == "__main__":
                                    network_name='negative_network',
                                    learning=True,
                                    forbidden_roots=forbidden_roots) 
-        negative_network.most_used_roots()
+        #negative_network.most_used_roots()
 
     if x==2:
         

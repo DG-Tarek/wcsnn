@@ -62,7 +62,7 @@ class izhikevich:
         self.d = np.concatenate([8*np.ones(self.Ne)])#, 8*np.ones(self.Ni)])
         self.v = -65*np.ones(self.Ne)#+self.Ni)
         self.u = self.b * self.v
-        self.Tmax = 1000
+        self.Tmax = 500
         self.fired =[]
         self.tabo= []
         self.waveActivation=[]
@@ -101,6 +101,7 @@ class izhikevich:
 
 
     def _I(self):
+        self.I = self.I * .99
         for f in self.fired :
             for neighbor in self.NETWORK[f]:
                 self.I[neighbor[0]]+=neighbor[1]
@@ -120,28 +121,33 @@ class izhikevich:
 
         self.score = np.sum(lissedWaveActivation)
         print('\n'+self.network_path+' '+str(np.sum(lissedWaveActivation))+'\n')
-        plt.plot(lissedWaveActivation)
-        plt.show()
+        #plt.plot(lissedWaveActivation)
+        #plt.show()
    
 
    
     def activate(self,serial_number):
+        maxInterval = 20
+        minInterval = 1
         for t in range(self.Tmax):
             if t==0:
                 self.reset()
+            #self.I = np.zeros((self.Ne))
             #self.I=np.zeros((self.Ne))#+self.Ni))
-            self.I = 0 * (self.I>=10) + self.I * (self.I<10)
             self.fired  = np.where(self.v>30)[0]
             self.fired = [f for f in self.fired if isInList(self.tabo,f)==-1]
             self.waveActivation += [len(self.fired)]
             self._I()
-            
-            self.v = self.v * (self.v<30) + self.c * (self.v>=30)
-            self.u = self.u * (self.v<30) + (self.u+self.d) * (self.v>=30)
+            self.I = maxInterval * (self.I>=maxInterval) + self.I * (self.I<maxInterval) 
+            self.I = 0 * (self.I<minInterval) + self.I * (self.I>=minInterval) 
 
-            if t<9:
+            if t<60:
                 for number in serial_number:
-                    self.I[number]=10 
+                    self.I[number]=20 
+            
+            _v = self.v
+            self.v = self.v * (self.v<30) + self.c * (self.v>=30)
+            self.u = self.u * (_v<30) + (self.u+self.d) * (_v>=30)
 
 
             dt=0.2
@@ -173,7 +179,7 @@ if __name__ == "__main__":
 
 
     if True:
-        N=5
+        N=10
         pos_res =0
         neg_res=0
 
