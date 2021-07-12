@@ -92,10 +92,11 @@ class Network:
             self.network_name = network_name
             self.forbidden_roots = forbidden_roots           
             self.network = []
-            self.STDP=[1,0.5,0.5,0.5]
+            self.STDP=[1,0.5,0.25,0.125]
             self.ROOTS = self.read_roots_file()
             self.creating_network()
             self.standardization()
+            self.neuron_fitness()
             self.write_network()
             self.network_info()
         else :
@@ -160,7 +161,7 @@ class Network:
             if serial_number[i] not in self.forbidden_roots:
                 neuron_neighbors=[]
                 k=i+1
-                while k<i+3:
+                while k<i+4:
                     try:
                         if serial_number[k] not in self.forbidden_roots:
                             neuron_neighbors.append(serial_number[k])
@@ -226,8 +227,6 @@ class Network:
         start =time.time()
         for j in range(1): # how many times you will learn this network...
             for comment in COMMENTS:
-
-
                     if words_nbr > words_max_nbr:
                         break;
 
@@ -251,22 +250,24 @@ class Network:
     
     # standardization of weights (Normalisaion) (->log()).
     def standardization(self):
-        self.get_max_weight()
         for i in range(len(self.network)):
             for j in range(len(self.network[i])):
-                self.network[i][j][1]=math.log(1+self.network[i][j][1])*0.615
-        self.get_max_weight()
+                self.network[i][j][1]=math.log(1+self.network[i][j][1])*2.15
 
     # return network total weight (sum of all weights in the network .)
     def network_total_weight(self):
         weight=0
         for neuron in self.network:
+            i=0
             for neighbor in neuron:
                 weight +=neighbor[1]
+                i+=1
+                if i == len(neuron)-1:
+                    break
         return weight
 
     # retutn the sum of weights of a neuron with its neighbor.
-    def get_neuron_total_weight(self,neuron):
+    def neuron_total_weight(self,neuron):
         weight=0
         for neighbor in self.network[neuron]:
             weight+=neighbor[1]
@@ -276,14 +277,15 @@ class Network:
     def network_re(self):
         re=0
         for neuron in self.network:
-            re +=len(neuron)
+            if(len(neuron)>1):
+                re +=len(neuron)-1
         return re
 
     # return the max weight value in this network
     def get_max_weight(self):
         weight=0
         for i in range(len(self.network)):
-            for j in range(len(self.network[i])):
+            for j in range(len(self.network[i])-1):
                 if self.network[i][j][1]>weight:
                     weight=self.network[i][j][1]
         return weight
@@ -292,8 +294,12 @@ class Network:
     def neurons_I(self):
         I = np.zeros(len(self.network))
         for neuron in self.network:
+            i=0
             for neighbor in neuron:
                 I[neighbor[0]]+=neighbor[1]
+                i+=1
+                if i == len(neuron)-1:
+                    break
         I = np.where(I>3.56)[0]
         return len(I)
 
@@ -318,36 +324,34 @@ class Network:
                     index.append(j)
                     n_max_index.remove(j)
 
-        return index,n_max_neighbor
+        return index
 
 
     # return most used roots in this network.
     def most_used_roots(self,roots,n):
-        n_max_index , n_max_neighbor =self.neurons_with_largest_neighbours(n)
-        j=0
+        n_max_index  =self.neurons_with_largest_neighbours(n)        
         for i in n_max_index:
-            if j==0:
-                print('[ (i) , roots , neigbors , neuron_weight ]')
-            print('[ ('+str(i)+') , '+roots[i]+' , '+str(n_max_neighbor[j])+' , '+str(self.get_neuron_total_weight(i))+' ]')
-            j+=1
-        print('None for what ?!')
+            print('[ ('+str(i)+') , '+roots[i]+' , '+str(self.network[i][-1][0])+' , '+str(self.network[i][-1][1])+' ]')
     
     def number_of_living_neurons(self):
         n=0
-        for i in self.network:
-            if len(i)>0:
+        for neuron in self.network:
+            if len(neuron)>0:
                 n+=1
         return n
         
         
 
-        
+    def neuron_fitness(self):
+        for i in range(len(self.network)):
+            if len(self.network[i])>1:
+                self.network[i]+=[[len(self.network[i]),self.neuron_total_weight(i)]]
       
 
 
 
 if __name__ == "__main__":
-    x=11
+    x=2
     if x==1:
         ROOTS=read_roots_file()
         # Creating a negative_network pickle file from negative_comments.pkl .
@@ -358,8 +362,8 @@ if __name__ == "__main__":
                                    network_name='negative_network',
                                    learning=True,
                                    forbidden_roots=forbidden_roots) 
-        negative_network.most_used_roots()
-
+        #negative_network.most_used_roots(ROOTS,10)
+        
     if x==2:
         
         ROOTS=read_roots_file()
@@ -370,9 +374,9 @@ if __name__ == "__main__":
                                    roots_path='roots.pkl',
                                    network_name='positive_network',
                                    learning=True,
-                                   forbidden_roots=forbidden_roots)
-        positive_network.most_used_roots()
-
+                                   forbidden_roots=forbidden_roots)        
+        #positive_network.most_used_roots(ROOTS,10)
+        
     if x==3 :
 
         # THIS BLOCK FOR CREATING NETWORKS :
@@ -410,23 +414,25 @@ if __name__ == "__main__":
     if x==4 :
 
         # THIS BLOCK FOR READING NETWORKS FROM NETWORKS PICKLE FILES :
-
+        ROOTS=read_roots_file()
         start =time.time()
         normal_network = Network( path='normal_network.pkl')
         #print(normal_network.network)
 
         positive_network = Network( path='positive_network.pkl')
+        positive_network.most_used_roots(ROOTS,10)
         #print(positive_network.network)
 
 
         negative_network = Network( path='negative_network.pkl')
+        negative_network.most_used_roots(ROOTS,10)
         #print(negative_network.network)
       
         
         print(f"Runtime  is : {time.time() - start}")
     
 
-    if True:
+    if False:
         
         # Testing BLOCK : 
         ROOTS=read_roots_file()
