@@ -214,8 +214,7 @@ class Network:
         p=0
         k,kk=0,0
         words_nbr=0
-        words_max_nbr = 224552
-        comment_max_lenght = 0
+        words_max_nbr = 203000
         for i in range(len(self.ROOTS)):
             self.network+=[[]]
 
@@ -229,10 +228,6 @@ class Network:
             for comment in COMMENTS:
                     if words_nbr > words_max_nbr:
                         break;
-
-                    if len(comment)>comment_max_lenght:
-                        comment_max_lenght=len(comment)
-
                     words_nbr +=len(comment)
                     p+=1
                     self.learn_serial_number(serial_number=comment)
@@ -245,14 +240,14 @@ class Network:
                         kk=k
 
         print('Words nomber : '+str(words_nbr/p))  
-        print('Comment max lenght : '+str(comment_max_lenght))
         print(" System -> learning comments Finished.")
+        print(p)
     
     # standardization of weights (Normalisaion) (->log()).
     def standardization(self):
         for i in range(len(self.network)):
             for j in range(len(self.network[i])):
-                self.network[i][j][1]=math.log(1+self.network[i][j][1])*2.15
+                self.network[i][j][1]=math.log(1+self.network[i][j][1])*2.135
 
     # return network total weight (sum of all weights in the network .)
     def network_total_weight(self):
@@ -364,6 +359,7 @@ if __name__ == "__main__":
                                    forbidden_roots=forbidden_roots) 
         #negative_network.most_used_roots(ROOTS,10)
         
+        
     if x==2:
         
         ROOTS=read_roots_file()
@@ -376,6 +372,7 @@ if __name__ == "__main__":
                                    learning=True,
                                    forbidden_roots=forbidden_roots)        
         #positive_network.most_used_roots(ROOTS,10)
+        x=4
         
     if x==3 :
 
