@@ -65,7 +65,7 @@ class SentimentAnalysis:
         self.tabo= []
         self.waveActivation=[]
         self.buffer = []
-        for i in range(50):
+        for i in range(35):
             self.buffer += [[]]
         self.score=0
         
@@ -125,8 +125,7 @@ class SentimentAnalysis:
 
     def neuron_fitness(self,network,neuron):
         if len(network[neuron])>0:
-            return network[neuron][-1][0]*1+network[neuron][-1][1]*1.2
-
+            return network[neuron][-1][0]*1.05+network[neuron][-1][1]*1.2
         else:
             return 0
        
@@ -198,8 +197,10 @@ if __name__ == "__main__":
         positive_network = SentimentAnalysis(first_net_path='positive_network.pkl',second_net_path='negative_network.pkl')    
         negative_network = SentimentAnalysis(first_net_path='negative_network.pkl',second_net_path='positive_network.pkl')
 
-        pos_list=random.sample(range(0, len(positive_comments)), N)
-        neg_list=random.sample(range(0, len(negative_comments)-4500), N)
+        pos_list=random.sample(range(34641, len(positive_comments)), N)
+        neg_list=random.sample(range(21170, len(negative_comments)), N)
+        #pos_list=[34661]
+        #neg_list=[27443]
         print(pos_list)
         print(neg_list)
         pp=0
