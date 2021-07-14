@@ -26,7 +26,7 @@ def read_network_file(path):
 
 roots = read_roots_file("roots.pkl")
 #print(roots)
-graph = read_network_file('negative_network.pkl')
+graph = read_network_file('positive_network.pkl')
 
 
 max_l = 0
@@ -41,9 +41,11 @@ for vertex in graph:
 G=nx.Graph()
 buffer = []
 node_sizes = []
+node_colors = [] 
+colors = ['red', 'green', 'blue','yellow', 'purple']
 def create_sub_graph(r, level):
-    global G, graph, buffer, node_sizes
-    if (level<=2):
+    global G, graph, buffer, node_sizes, node_colors
+    if (level<=3):
         G.add_node(r)     
         #print(r)           
         for v in graph[r]:
@@ -51,16 +53,20 @@ def create_sub_graph(r, level):
             if (not v[0] in buffer):
                 buffer += [v[0]]
                 node_sizes += [len(graph[v[0]])]
+                node_colors += [colors[level-1]]
                 create_sub_graph(v[0],level+1)
     else :
         return
 
 
-first_v = 7
+first_v = 8405
 buffer = [first_v]
+node_colors = ['red']
 node_sizes = [len(graph[first_v])]
 create_sub_graph(first_v, 1)
+
 print(len(node_sizes))
-nx.draw(G , edgecolors='black', node_size=node_sizes)
+
+nx.draw(G , node_color=node_colors, edgecolors='black', node_size=node_sizes)
 plt.show()
 
