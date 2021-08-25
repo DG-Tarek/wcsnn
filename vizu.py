@@ -1,6 +1,7 @@
 import networkx as nx
 import pickle
 from matplotlib import pyplot as plt
+import numpy as np
 
 def read_roots_file(path):
         try:
@@ -25,7 +26,7 @@ def read_network_file(path):
         print(" System -> [error] Downloading network failed ! .")
 
 roots = read_roots_file("roots.pkl")
-#print(roots)
+print(roots)
 graph = read_network_file('positive_network.pkl')
 
 
@@ -42,7 +43,7 @@ G=nx.Graph()
 buffer = []
 node_sizes = []
 node_colors = [] 
-colors = ['red', 'green', 'blue','yellow', 'purple']
+colors = ['red', 'green', 'blue','yellow', 'purple','black','pink','orange']
 def create_sub_graph(r, level):
     global G, graph, buffer, node_sizes, node_colors
     if (level<=3):
@@ -59,7 +60,7 @@ def create_sub_graph(r, level):
         return
 
 
-first_v = 8405
+first_v = 7405
 buffer = [first_v]
 node_colors = ['red']
 node_sizes = [len(graph[first_v])]

@@ -60,12 +60,12 @@ class SentimentAnalysis:
         self.d = np.concatenate([8*np.ones(self.Ne)])#, 8*np.ones(self.Ni)])
         self.v = -65*np.ones(self.Ne)#+self.Ni)
         self.u = self.b * self.v
-        self.Tmax = 1000
+        self.Tmax = 500
         self.fired =[]
         self.tabo= []
         self.waveActivation=[]
         self.buffer = []
-        for i in range(35):
+        for i in range(30):
             self.buffer += [[]]
         self.score=0
         
@@ -78,7 +78,7 @@ class SentimentAnalysis:
         self.tabo= []
         self.waveActivation=[]
         self.buffer = []
-        for i in range(35):
+        for i in range(30):
             self.buffer += [[]]
         self.score=0
 
@@ -103,6 +103,8 @@ class SentimentAnalysis:
             for neighbor in self.first_network[f]:
                 if self.neuron_fitness(self.first_network,neighbor[0])>=self.neuron_fitness(self.second_network,neighbor[0]) or self.doubt():
                     self.I[neighbor[0]]+=neighbor[1]
+                
+
         self.buffer = self.buffer + [self.fired]
         currentHead = self.buffer[0]
         self.buffer.pop(0)
@@ -120,6 +122,7 @@ class SentimentAnalysis:
         self.score = np.sum(lissedWaveActivation)
         print(str(np.sum(lissedWaveActivation)))
         #plt.plot(lissedWaveActivation)
+        #plt.text(700,35,str(self.score))
         #plt.show()
    
 
@@ -132,10 +135,8 @@ class SentimentAnalysis:
     
 
     def doubt(self):
-        if random.random() < 0.075 :
-            return True
-        else:
-            return False
+        return random.random() < 0.075 
+
 
 
     def activate(self,serial_number):
@@ -160,7 +161,7 @@ class SentimentAnalysis:
 
             dt=0.1
             self.v = self.v + dt * (0.04 * np.power(self.v,2) + 5 * self.v + 140 - self.u + self.I);
-            self.u = self.u + self.a * (self.b * self.v - self.u);
+            self.u = self.u + dt * (self.a * (self.b * self.v - self.u));
 
             #self.v[self.tabo]=0;
             #self.I[self.tabo]=0
@@ -187,7 +188,7 @@ if __name__ == "__main__":
 
 
     if True:
-        N=100
+        N=1
         pos_res =0
         neg_res=0
 
@@ -196,15 +197,24 @@ if __name__ == "__main__":
         
         positive_network = SentimentAnalysis(first_net_path='positive_network.pkl',second_net_path='negative_network.pkl')    
         negative_network = SentimentAnalysis(first_net_path='negative_network.pkl',second_net_path='positive_network.pkl')
-
-        pos_list=random.sample(range(34641, len(positive_comments)), N)
-        neg_list=random.sample(range(21170, len(negative_comments)), N)
-        #pos_list=[34661]
-        #neg_list=[27443]
-        print(pos_list)
-        print(neg_list)
+        print("nbr p c : "+str(len(positive_comments)-34641))
+        print("nbr n c : "+str(len(negative_comments)-21170))
+        #pos_list=random.sample(range(34641, len(positive_comments)), N)
+        #neg_list=random.sample(range(21170, len(negative_comments)), N)
+        # pos_list=[34661]
+        # neg_list=[27443]
+    
+        
         pp=0
         nn=0
+
+
+    if False :
+        pos_list=[]
+        for i in range(34641,len(positive_comments)-1):
+            pos_list+=[i]
+
+                
         i=0
         for c in pos_list:
             print('\ncomment '+str(i)+' :'+'\n')
@@ -214,24 +224,32 @@ if __name__ == "__main__":
             n=negative_network.activate(comment)
             if p>n:
                 pos_res +=1
-                print('positive')
+                print(pos_res)
+                print('positive , '  + str(pos_res)+'/'+str(i) + ' , '+str((pos_res/i)*100)+'%')
                 if p < 10:
-                    pp+=1
+                    pp+=1 
+                    
 
             
+    if True:
+
+        neg_list=[]
+        for i in range(24739,25000):
+            neg_list+=[i]
 
         i = 0
         for c in neg_list:
-            print('\ncomment '+str(i)+' :'+'\n')
-            i+=1
-            comment =negative_comments[c]
-            n=negative_network.activate(comment)
-            p=positive_network.activate(comment)   
-            if n>p:
-                neg_res +=1
-                print('negative')
-                if n <10:
-                    nn+=1
+                print('\ncomment '+str(i)+' :'+'\n')
+                i+=1
+                comment =negative_comments[c]
+                n=negative_network.activate(comment)
+                p=positive_network.activate(comment)   
+                if n>p:
+                    neg_res +=1
+                    print('negative')
+                    print('positive , '  + str(neg_res)+'/'+str(i) + ' , '+str((neg_res/i)*100)+'%')
+                    if n <10:
+                        nn+=1
 
 
         

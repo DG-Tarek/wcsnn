@@ -36,7 +36,8 @@ from dictionary import getSerialNumber as get_serial_number
         # 18 def neurons_I(self): -> return neurons that have total_I > 3.56 . 
         # 19 def most_used_roots(self,roots,n): -> return most used roots in this network. 
 
-
+DIST = 3
+WEIG = 2.575
 def isInList(list,target):
     #Binary Search 
     left = 0
@@ -66,7 +67,7 @@ def read_roots_file():
 
 class Network:
 
-    def __init__(self,path,roots_path=None,network_name=None,learning=None,forbidden_roots=None):
+    def __init__(self,true_path,false_path=None,roots_path=None,network_name=None,learning=None,forbidden_roots=None):
 
         # path :
             # if creating a network : (path:str) comments pickle file path .
@@ -87,20 +88,22 @@ class Network:
 
 
         if learning is not None :
-            self.path = path
+            self.true_path = true_path
+            self.false_path = false_path
             self.roots_path=roots_path
             self.network_name = network_name
             self.forbidden_roots = forbidden_roots           
             self.network = []
-            self.STDP=[1,0.5,0.25,0.125]
+            self.LTP=[1,0.5,0.44]
+            self.LTD=[-1,-0.5,-0.44]
             self.ROOTS = self.read_roots_file()
-            self.creating_network()
+            self.learning_network()
             self.standardization()
             self.neuron_fitness()
             self.write_network()
             self.network_info()
         else :
-            self.path = path
+            self.path = true_path
             self.network = self.read_network_file()
             self.network_info()
 
@@ -150,18 +153,24 @@ class Network:
     def setWeight(self,neuron,neighbor,weight):
          self.network[neuron][isInList(list=self.network[neuron],target=neighbor)][1]= weight
     
-    # get STPD value .
-    def stdp(self,deltaT):
-        return self.STDP[deltaT]
+    # get ltp value .
+    def ltp(self,deltaT):
+        return self.LTP[deltaT]
+
+    # get ltd value .
+    def ltd(self,deltaT):
+        return self.LTD[deltaT]
 
     # Learn this serial number.
-    def learn_serial_number(self,serial_number):
-
+    def learn_serial_number_by_ltp(self,serial_number):
+        words_max_nbr = 203000
         for i in range(len(serial_number)) :
+            if i == words_max_nbr:
+                break
             if serial_number[i] not in self.forbidden_roots:
                 neuron_neighbors=[]
                 k=i+1
-                while k<i+4:
+                while k<i+DIST:
                     try:
                         if serial_number[k] not in self.forbidden_roots:
                             neuron_neighbors.append(serial_number[k])
@@ -169,16 +178,40 @@ class Network:
                         pass
                     k+=1
                 distance=0
-                for j in neuron_neighbors:
-                    if self.isNeighbor(neuron=serial_number[i],neighbor=j)== None:
-                        self.add_neighbor(neuron=serial_number[i],neighbor=j)
+                for neighbor in neuron_neighbors:
+                    if self.isNeighbor(neuron=serial_number[i],neighbor=neighbor)== None:
+                        self.add_neighbor(neuron=serial_number[i],neighbor=neighbor)
                         self.setWeight(neuron=serial_number[i],
-                                    neighbor=j,
-                                    weight=self.stdp(distance))
+                                       neighbor=neighbor,
+                                       weight=self.ltp(distance))
                     else:
                         self.setWeight(neuron=serial_number[i],
-                                    neighbor=j,
-                                    weight=self.getWeight(neuron=serial_number[i],neighbor=j)+self.stdp(distance))
+                                       neighbor=neighbor,
+                                       weight=self.getWeight(neuron=serial_number[i],neighbor=neighbor)+self.ltp(distance))
+                    distance+=1
+
+                    
+    def learn_serial_number_by_ltd(self,serial_number):
+        words_max_nbr = 203000
+        for i in range(len(serial_number)) :
+            if i == words_max_nbr:
+                break
+            if serial_number[i] not in self.forbidden_roots:
+                neuron_neighbors=[]
+                k=i+1
+                while k<i+DIST:
+                    try:
+                        if serial_number[k] not in self.forbidden_roots:
+                            neuron_neighbors.append(serial_number[k])
+                    except:
+                        pass
+                    k+=1
+                distance=0
+                for neighbor in neuron_neighbors:
+                    if self.isNeighbor(neuron=serial_number[i],neighbor=neighbor)!= None:
+                            self.setWeight(neuron=serial_number[i],
+                                        neighbor=neighbor,
+                                        weight=self.getWeight(neuron=serial_number[i],neighbor=neighbor)+(self.ltd(distance)*0.5))
                     distance+=1
 
             
@@ -210,7 +243,7 @@ class Network:
 
 
     # creating a network from learning serial numbers(Comments) .
-    def creating_network(self):
+    def learning_network(self):
         p=0
         k,kk=0,0
         words_nbr=0
@@ -218,36 +251,72 @@ class Network:
         for i in range(len(self.ROOTS)):
             self.network+=[[]]
 
-        print("\n\n\n System -> Start learning comments ... ")
-        open_file = open(self.path, "rb")
-        COMMENTS = np.array(pickle.load(open_file))
-        print(len(COMMENTS))
+        print("\n\n\n System -> Start learning ... ")
+        open_file = open(self.true_path, "rb")
+        LTP_COMMENTS = np.array(pickle.load(open_file))
         open_file.close()
+        LTP_COMMENTS=[[root for comment in LTP_COMMENTS for root in comment]]
         start =time.time()
         for j in range(1): # how many times you will learn this network...
-            for comment in COMMENTS:
-                    if words_nbr > words_max_nbr:
-                        break;
-                    words_nbr +=len(comment)
+            for comment in LTP_COMMENTS:
+                    # if words_nbr > words_max_nbr:
+                    #     print('here')
+                    #     break;
+                    # words_nbr +=len(comment)
                     p+=1
-                    self.learn_serial_number(serial_number=comment)
                     
-                    k=int((p*100)/len(COMMENTS))
+                    self.learn_serial_number_by_ltp(serial_number=comment)
+                    
+                    k=int((p*100)/len(LTP_COMMENTS))
                     if k > kk :
                         
                         print("        ->  learning  ... " + str(k)+'% ('+str(int((time.time()-start)/60))+
                         ' min '+str(int((time.time()-start)%60))+' s).')
                         kk=k
+     
 
-        print('Words nomber : '+str(words_nbr/p))  
-        print(" System -> learning comments Finished.")
         print(p)
+        p=0
+        k,kk=0,0
+        words_nbr=0
+        words_max_nbr = 203000
+       
+        open_file = open(self.false_path, "rb")
+        LTD_COMMENTS = np.array(pickle.load(open_file))
+        open_file.close()
+        LTD_COMMENTS=[[root for comment in LTD_COMMENTS for root in comment]]
+        for j in range(1): # how many times you will learn this network...
+            for comment in LTD_COMMENTS:
+                    # if words_nbr > words_max_nbr:
+                    #     break;
+                    # words_nbr +=len(comment)
+                    p+=1
+                    self.learn_serial_number_by_ltd(serial_number=comment)
+                    
+                    k=int((p*100)/len(LTD_COMMENTS))
+                    if k > kk :
+                        
+                        print("        ->  learning  ... " + str(k)+'% ('+str(int((time.time()-start)/60))+
+                        ' min '+str(int((time.time()-start)%60))+' s).')
+                        kk=k
+        print(p)
+        print(" System -> Learning done.")
+
+
+
+
+
+        
+  
     
     # standardization of weights (Normalisaion) (->log()).
     def standardization(self):
         for i in range(len(self.network)):
             for j in range(len(self.network[i])):
-                self.network[i][j][1]=math.log(1+self.network[i][j][1])*2.135
+                try :
+                    self.network[i][j][1]=math.log(1+self.network[i][j][1])*WEIG    #p 2.135 / n 2
+                except : 
+                    self.network[i][j][1]= 0
 
     # return network total weight (sum of all weights in the network .)
     def network_total_weight(self):
@@ -346,13 +415,14 @@ class Network:
 
 
 if __name__ == "__main__":
-    x=2
+    x=4
     if x==1:
         ROOTS=read_roots_file()
         # Creating a negative_network pickle file from negative_comments.pkl .
         forbidden_roots='t7b slm wlh nchlh brv nchl n7b mrc'
         forbidden_roots=get_serial_number(text=forbidden_roots,roots=ROOTS)
-        negative_network = Network(path='negative_comments.pkl',
+        negative_network = Network(true_path ='negative_comments.pkl',
+                                   false_path='positive_comments.pkl',
                                    roots_path='roots.pkl',
                                    network_name='negative_network',
                                    learning=True,
@@ -366,13 +436,14 @@ if __name__ == "__main__":
         # Creating a positive_network pickle file from positive_comments.pkl .
         forbidden_roots='mch'
         forbidden_roots=get_serial_number(text=forbidden_roots,roots=ROOTS)
-        positive_network = Network(path='positive_comments.pkl',
+        positive_network = Network(true_path='positive_comments.pkl',
+                                   false_path='negative_comments.pkl',
                                    roots_path='roots.pkl',
                                    network_name='positive_network',
                                    learning=True,
                                    forbidden_roots=forbidden_roots)        
         #positive_network.most_used_roots(ROOTS,10)
-        x=4
+  
         
     if x==3 :
 
@@ -413,16 +484,16 @@ if __name__ == "__main__":
         # THIS BLOCK FOR READING NETWORKS FROM NETWORKS PICKLE FILES :
         ROOTS=read_roots_file()
         start =time.time()
-        normal_network = Network( path='normal_network.pkl')
+        normal_network = Network( true_path='normal_network.pkl')
         #print(normal_network.network)
 
-        positive_network = Network( path='positive_network.pkl')
-        positive_network.most_used_roots(ROOTS,10)
+        positive_network = Network( true_path='positive_network.pkl')
+        positive_network.most_used_roots(ROOTS,75)
         #print(positive_network.network)
 
 
-        negative_network = Network( path='negative_network.pkl')
-        negative_network.most_used_roots(ROOTS,10)
+        negative_network = Network( true_path='negative_network.pkl')
+        negative_network.most_used_roots(ROOTS,75)
         #print(negative_network.network)
       
         
