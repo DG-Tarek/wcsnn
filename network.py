@@ -1,11 +1,12 @@
-# Last edit : Friday 06/24/2021.
+# Last edit : Friday 14/09/2021.
 # Created on Python 3.9(64bit).
+# tarek.dg.dz@gmail.com
 
 from os import RTLD_NODELETE
-import numpy as np # already exist in library .
-import time # already exist in library .
-import pickle # already exist in library .
-import math # already exist in library .
+import numpy as np # already exist.
+import time # already exist.
+import pickle # already exist.
+import math # already exist.
 from dictionary import getSerialNumber as get_serial_number
 
 
@@ -19,25 +20,31 @@ from dictionary import getSerialNumber as get_serial_number
         # 1 def read_roots_file(self): -> Read roots from a roots pickle file .
         # 2 def read_network_file(self): -> Read network from a network pickle file .
         # 3 def write_network(self): -> Write network pickle file (save as Matrix (in binary)).
-        # 4 def create_neuron(self,neuron): -> Creating a neuron with a 0 weight .
+        # 4 def create_neuron(self,neuron): -> Creating a neuron with 0 weight and 0 neighbors.
         # 5 def add_neighbor(self,neuron,neighbor): -> add a neuron as a neighbor to the list of neighbors .
         # 6 def isNeighbor(self,neuron,neighbor): -> return index if this neuron is a neighbor.
         # 7 def getWeight(self,neuron,neighbor): -> get weight value between neuron and his neighbor.
         # 8 def setWeight(self,neuron,neighbor,weight): -> set this weight value between neuron and his neighbor.
-        # 9 def stdp(self,deltaT): -> return STPD value.
-        # 10 def learn_serial_number(self,serial_number): -> Learn this serial number.
+        # 9 def ltp(self,deltaT): -> return ltp value.
+        #   def ltd(self,deltaT): -> return ltd value.       
+        # 10 def learn_serial_number_by_ltp(self,serial_number): -> Learn this serial number by LTP (increment weights). 
+        #    def learn_serial_number_by_ltd(self,serial_number): -> Learn this serial number by LTD (decrease weights).                  
         # 11 def network_info(self): -> show network informations.
         # 12 def creating_network(self): -> creating a network from learning serial numbers (Comments) .
         # 13 def standardization(self): -> standardization of weights (Normalisaion) (->log()).
         # 14 def network_total_weight(self): -> return network total weight (sum of all weights in the network).
-        # 15 def get_neuron_weight(self,neuron): -> retutn the sum of weights of a neuron with its neighbor.
+        # 15 def get_neuron_weight(self,neuron): -> retutn the sum of weights of a neuron with his neighbor.
         # 16 def network_re(self): -> return the sum of relations between neurons and neighbors. 
         # 17 def get_max_weight(self): -> return the max weight value in this network. 
         # 18 def neurons_I(self): -> return neurons that have total_I > 3.56 . 
         # 19 def most_used_roots(self,roots,n): -> return most used roots in this network. 
+        # 20 def number_of_living_neurons(self): -> number of neurons who have neighbor(s).
+        # 21 def neuron_fitness(self): -> neuron fitness -->> neuron = [ number of relations , total weight weights connection with neighbors]
+    
+   
 
-DIST = 3
-WEIG = 2.575
+DIST = 3  # =3 for negative / = 4 for positive . 
+WEIG = 2  # =2 for negative / = 2.135 for positive . 
 def isInList(list,target):
     #Binary Search 
     left = 0
@@ -69,9 +76,12 @@ class Network:
 
     def __init__(self,true_path,false_path=None,roots_path=None,network_name=None,learning=None,forbidden_roots=None):
 
-        # path :
-            # if creating a network : (path:str) comments pickle file path .
+        #true_path :
+            # if creating a network : (path:str) true comments -> pickle file path (True class for LTP Learning).
             # if reading a network from a network pickle file : (path:str) network pickle file path .
+        #false_path :
+            # if creating a network : (path:str) false comments -> pickle file path (False class for LTD Learning).
+            # if reading a network from a network pickle file : None.
         # roots_path : 
             # if creating a network :(path:str) roots pickle file path .
             # if reading a network from a network pickle file : None .
@@ -87,7 +97,7 @@ class Network:
             
 
 
-        if learning is not None :
+        if learning is not None : #Learning == True.
             self.true_path = true_path
             self.false_path = false_path
             self.roots_path=roots_path
@@ -132,7 +142,7 @@ class Network:
         except :
             print(" System -> [error] Downloading network failed ! .")
 
-    # Creating a neuron with a 0 weight .
+    # Creating a neuron with 0 weight and 0 neighbors.
     def create_neuron(self,neuron):
         return [neuron,0]
     
@@ -153,15 +163,15 @@ class Network:
     def setWeight(self,neuron,neighbor,weight):
          self.network[neuron][isInList(list=self.network[neuron],target=neighbor)][1]= weight
     
-    # get ltp value .
+    # return ltp value .
     def ltp(self,deltaT):
         return self.LTP[deltaT]
 
-    # get ltd value .
+    # return ltd value .
     def ltd(self,deltaT):
         return self.LTD[deltaT]
 
-    # Learn this serial number.
+    # Learn this serial number by LTP (increment weights).
     def learn_serial_number_by_ltp(self,serial_number):
         words_max_nbr = 203000
         for i in range(len(serial_number)) :
@@ -190,7 +200,7 @@ class Network:
                                        weight=self.getWeight(neuron=serial_number[i],neighbor=neighbor)+self.ltp(distance))
                     distance+=1
 
-                    
+    # Learn this serial number by LTD (decrease weights).               
     def learn_serial_number_by_ltd(self,serial_number):
         words_max_nbr = 203000
         for i in range(len(serial_number)) :
@@ -246,8 +256,6 @@ class Network:
     def learning_network(self):
         p=0
         k,kk=0,0
-        words_nbr=0
-        words_max_nbr = 203000
         for i in range(len(self.ROOTS)):
             self.network+=[[]]
 
@@ -257,49 +265,32 @@ class Network:
         open_file.close()
         LTP_COMMENTS=[[root for comment in LTP_COMMENTS for root in comment]]
         start =time.time()
-        for j in range(1): # how many times you will learn this network...
+        for j in range(1): # how many times you will repeat this type of learning ...
             for comment in LTP_COMMENTS:
-                    # if words_nbr > words_max_nbr:
-                    #     print('here')
-                    #     break;
-                    # words_nbr +=len(comment)
-                    p+=1
-                    
-                    self.learn_serial_number_by_ltp(serial_number=comment)
-                    
+                    p+=1             
+                    self.learn_serial_number_by_ltp(serial_number=comment)  
                     k=int((p*100)/len(LTP_COMMENTS))
                     if k > kk :
-                        
-                        print("        ->  learning  ... " + str(k)+'% ('+str(int((time.time()-start)/60))+
+                        print("        ->  learning  LTP ... " + str(k)+'% ('+str(int((time.time()-start)/60))+
                         ' min '+str(int((time.time()-start)%60))+' s).')
                         kk=k
-     
-
-        print(p)
+       
         p=0
         k,kk=0,0
-        words_nbr=0
-        words_max_nbr = 203000
-       
         open_file = open(self.false_path, "rb")
         LTD_COMMENTS = np.array(pickle.load(open_file))
         open_file.close()
         LTD_COMMENTS=[[root for comment in LTD_COMMENTS for root in comment]]
-        for j in range(1): # how many times you will learn this network...
+        for j in range(1): # how many times you will repeat this type of learning ...
             for comment in LTD_COMMENTS:
-                    # if words_nbr > words_max_nbr:
-                    #     break;
-                    # words_nbr +=len(comment)
                     p+=1
-                    self.learn_serial_number_by_ltd(serial_number=comment)
-                    
+                    self.learn_serial_number_by_ltd(serial_number=comment)                
                     k=int((p*100)/len(LTD_COMMENTS))
-                    if k > kk :
-                        
-                        print("        ->  learning  ... " + str(k)+'% ('+str(int((time.time()-start)/60))+
+                    if k > kk :                   
+                        print("        ->  learning  LTD ... " + str(k)+'% ('+str(int((time.time()-start)/60))+
                         ' min '+str(int((time.time()-start)%60))+' s).')
                         kk=k
-        print(p)
+        
         print(" System -> Learning done.")
 
 
@@ -330,14 +321,14 @@ class Network:
                     break
         return weight
 
-    # retutn the sum of weights of a neuron with its neighbor.
+    # retutn the sum of weights of a neuron with his neighbor.
     def neuron_total_weight(self,neuron):
         weight=0
         for neighbor in self.network[neuron]:
             weight+=neighbor[1]
         return weight
 
-    # return the sum of relations between neurons and neighbors
+    # return the sum of relations in this network.
     def network_re(self):
         re=0
         for neuron in self.network:
@@ -345,7 +336,7 @@ class Network:
                 re +=len(neuron)-1
         return re
 
-    # return the max weight value in this network
+    # return the max weight value in this network.
     def get_max_weight(self):
         weight=0
         for i in range(len(self.network)):
@@ -354,7 +345,7 @@ class Network:
                     weight=self.network[i][j][1]
         return weight
 
-    # return neurons that have total_I > 3.56 .
+    # return neurons who have total_I > 3.56 .
     def neurons_I(self):
         I = np.zeros(len(self.network))
         for neuron in self.network:
@@ -397,6 +388,7 @@ class Network:
         for i in n_max_index:
             print('[ ('+str(i)+') , '+roots[i]+' , '+str(self.network[i][-1][0])+' , '+str(self.network[i][-1][1])+' ]')
     
+    # return number of neurons who have neighbor(s).
     def number_of_living_neurons(self):
         n=0
         for neuron in self.network:
@@ -405,7 +397,7 @@ class Network:
         return n
         
         
-
+    # neuron fitness -->> neuron = [ number of relations , total weight weights connection with neighbors]
     def neuron_fitness(self):
         for i in range(len(self.network)):
             if len(self.network[i])>1:
@@ -417,8 +409,12 @@ class Network:
 if __name__ == "__main__":
     x=4
     if x==1:
+
+        # THIS BLOCK FOR CREATING NEGATIVE NETWORK.
+
         ROOTS=read_roots_file()
         # Creating a negative_network pickle file from negative_comments.pkl .
+        start = time.time()
         forbidden_roots='t7b slm wlh nchlh brv nchl n7b mrc'
         forbidden_roots=get_serial_number(text=forbidden_roots,roots=ROOTS)
         negative_network = Network(true_path ='negative_comments.pkl',
@@ -428,12 +424,16 @@ if __name__ == "__main__":
                                    learning=True,
                                    forbidden_roots=forbidden_roots) 
         #negative_network.most_used_roots(ROOTS,10)
+        print( time.time()-start)
         
         
     if x==2:
+
+        # THIS BLOCK FOR CREATING POSITIVE NETWORK.
         
         ROOTS=read_roots_file()
         # Creating a positive_network pickle file from positive_comments.pkl .
+        start = time.time()
         forbidden_roots='mch'
         forbidden_roots=get_serial_number(text=forbidden_roots,roots=ROOTS)
         positive_network = Network(true_path='positive_comments.pkl',
@@ -443,6 +443,7 @@ if __name__ == "__main__":
                                    learning=True,
                                    forbidden_roots=forbidden_roots)        
         #positive_network.most_used_roots(ROOTS,10)
+        print( time.time()-start)
   
         
     if x==3 :
@@ -482,6 +483,7 @@ if __name__ == "__main__":
     if x==4 :
 
         # THIS BLOCK FOR READING NETWORKS FROM NETWORKS PICKLE FILES :
+
         ROOTS=read_roots_file()
         start =time.time()
         normal_network = Network( true_path='normal_network.pkl')
@@ -500,18 +502,7 @@ if __name__ == "__main__":
         print(f"Runtime  is : {time.time() - start}")
     
 
-    if False:
-        
-        # Testing BLOCK : 
-        ROOTS=read_roots_file()
-
-        network = Network( path='positive_network.pkl')
-
-        print(network.most_used_roots(ROOTS,30))
-        network = Network( path='negative_network.pkl')
-
-        print(network.most_used_roots(ROOTS,30))
-        
+    
        
 
 

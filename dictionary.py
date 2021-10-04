@@ -1,17 +1,19 @@
-# Last edit : Friday 06/04/2021.
-# Created on Python 3.8(64bit).
+# Last edit : Friday 14/09/2021.
+# Created on Python 3.9(64bit).
+# tarek.dg.dz@gmail.com
 
 import re # pip install regex .
 from csv import reader # pip install python-csv .
-import numpy as np # already exist in library .
-import pickle # already exist in library .
-import time # already exist in library .
+import numpy as np # already exist .
+import pickle # already exist .
+import time # already exist .
 
 
 train_path="Train.csv"
 roots_path = "roots.pkl"
 
 ROOTS = []
+# Forbidden roots in the dictionary
 Forbidden_roots =['lzm','5tr','3nd','m3k','chf','3lh','b3d','bch','tns','chy','3lch','bld','brb',
                   'ch3b','bld','chkn','rjl']
 
@@ -83,7 +85,7 @@ def addRoot(root):
     global ROOTS
     ROOTS.append(root)
 
-# Comment --->>> Serial number list.
+# Comment --->>> Serial number .
 def getSerialNumber(text,roots):
     serialNumber =np.array([])
     wordList = getWords(text=text)

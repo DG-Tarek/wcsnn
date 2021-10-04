@@ -1,1 +1,17 @@
-not yet ...
+Uncovery classifier.
+
+University of Jijel.
+
+Master 2 Artificial intelligence.
+
+Created by : Sir Zennir Mohamed Nadjib.
+	         Deghdegh Tarek.
+	         Boulahdid Aymen.
+Promo 2021.
+
+
+Abstract : 
+
+In this study we used a classifier (Uncovery) based on spiking neural networks. In this work, we use a type of spiking neuron based on the Izhikevich model. This classifier has the particularity to map each class to an autonomous connectome. The discrimination between classes is then done by analysing the propagation of a neural activity wave in each connectome. The elected class will be the one whose connectome is the most active. We applied this classifier on a base of comments in Tunisian dialect (70000 comments) in a perspective of sentiment analysis and that we divided at 90% for training and at 10% for testing. The results of the experiments reach 75% of correct classifications of positive comments and 70% of negative comments. The results exceeded the stage of speculation (50%), although it is research. We hope to achieve better results in the future by further optimising this classifier.
+
+Gmail : tarek.dg.dz@gmail.com

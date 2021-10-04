@@ -1,10 +1,11 @@
-# Last edit : Friday 06/04/2021.
-# Created on Python 3.8(64bit).
+# Last edit : Friday 14/09/2021.
+# Created on Python 3.9(64bit).
+# tarek.dg.dz@gmail.com
 
-from csv import reader # pip install python-csv .
-import numpy as np # already exist in library .
-import pickle # already exist in library .
-import time # already exist in library .
+from csv import reader # pip install python-csv.
+import numpy as np # already.
+import pickle # already exist.
+import time # already exist.
 from dictionary import getSerialNumber as get_serial_number # from dictionary.py in Folder.
 
 # The pickle module implements binary protocols for serializing and de-serializing a Python object structure.
@@ -16,8 +17,8 @@ class Comments :
     def __init__(self, train_path,roots_path,new_train,family=None):
         # train_path : (path:str) Train csv file path .
         # roots_path : (path:str) roots pickle file path .
-        # new_train : (String) name for the comments pickle file will return .
-        # family : (int) for find out comments class .
+        # new_train : (String) a name for the comments pickle file will return .
+        # family : (int) for specify comments class .
         if family is not None:
             self.train_path = train_path
             self.roots_path = roots_path
@@ -51,7 +52,7 @@ class Comments :
 
     # Converting comment from string comment to serial number comment.
     def Converting_comments(self):
-        l=70000
+        l=70000 # comments number.
         p=0
         k,kk=0,0
         print(" System -> Convert comments to serial number...")

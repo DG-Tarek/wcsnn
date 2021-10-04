@@ -1,3 +1,8 @@
+# Last edit : Friday 14/09/2021.
+# Created on Python 3.9(64bit).
+# tarek.dg.dz@gmail.com
+
+
 from math import ldexp
 from math import log
 from types import resolve_bases
@@ -7,10 +12,12 @@ import random
 from matplotlib import pyplot as plt
 from dictionary import getSerialNumber as get_serial_number 
 import time
+import threading
 
 
 # Binary Search https://runestone.academy/runestone/books/published/pythonds/SortSearch/TheBinarySearch.html .
-# Testing modify
+
+
 def isInList(list,target):
     #Binary Search 
     left = 0
@@ -47,19 +54,20 @@ def read_comments_file(comments_path):
 
 class SentimentAnalysis:
     def __init__(self,first_net_path,second_net_path):
-
+        
         self.first_network = self.read_network_file(first_net_path)
         self.second_network = self.read_network_file(second_net_path)
 
         #izhikevich
         self.Ne = max(len(self.first_network),len(self.second_network))
         self.I = np.zeros((self.Ne))
-        self.a = np.concatenate([0.02*np.ones(self.Ne)])#, 0.02*self.ri]);
-        self.b = np.concatenate([0.2*np.ones(self.Ne)])#, 0.2*self.ri]);
-        self.c = np.concatenate([-65*np.ones(self.Ne)])#, -65*np.ones(self.Ni)]);
-        self.d = np.concatenate([8*np.ones(self.Ne)])#, 8*np.ones(self.Ni)])
-        self.v = -65*np.ones(self.Ne)#+self.Ni)
+        self.a = np.concatenate([0.02*np.ones(self.Ne)])
+        self.b = np.concatenate([0.2*np.ones(self.Ne)])
+        self.c = np.concatenate([-65*np.ones(self.Ne)])
+        self.d = np.concatenate([8*np.ones(self.Ne)])
+        self.v = -65*np.ones(self.Ne)
         self.u = self.b * self.v
+        
         self.Tmax = 500
         self.fired =[]
         self.tabo= []
@@ -69,7 +77,7 @@ class SentimentAnalysis:
             self.buffer += [[]]
         self.score=0
         
-        
+    # Recoveryr estore defaults parameters of connectome.
     def reset(self):
         self.v = -65*np.ones(self.Ne)#+self.Ni)
         self.u = self.b * self.v
@@ -97,7 +105,7 @@ class SentimentAnalysis:
             print(" System -> Downloading network failed!") 
         
 
-
+    # wave propagation.
     def _I(self):
         for f in self.fired :
             for neighbor in self.first_network[f]:
@@ -112,20 +120,18 @@ class SentimentAnalysis:
         self.tabo.sort()
        
 
-
+    # wave propagation wave.
     def show(self):
         lissedWaveActivation = []
         window = 10
         for i in range(len(self.waveActivation)-window):
             lissedWaveActivation += [np.average(self.waveActivation[i:i+10])]
-
         self.score = np.sum(lissedWaveActivation)
-        print(str(np.sum(lissedWaveActivation)))
+        
         #plt.plot(lissedWaveActivation)
-        #plt.text(700,35,str(self.score))
         #plt.show()
    
-
+    # get neuron fitness.
     def neuron_fitness(self,network,neuron):
         if len(network[neuron])>0:
             return network[neuron][-1][0]*1.05+network[neuron][-1][1]*1.2
@@ -133,12 +139,12 @@ class SentimentAnalysis:
             return 0
        
     
-
+    # doubt rate before neuron activation .
     def doubt(self):
         return random.random() < 0.075 
 
 
-
+    # activate the connectome over a period of time (Tmax).
     def activate(self,serial_number):
         for t in range(self.Tmax):
             if t==0:
@@ -175,87 +181,42 @@ class SentimentAnalysis:
 
 
 if __name__ == "__main__":
-    if False : 
+    if True : 
+
+        # comment=("bravo koulchi mbrouk alikem  :3 .") This is just an example .
+        # Enter your comment and get the result.
+        # Enjoy it (^_^) .
+
+        # negative connectome.
+        def negative_connectome(text):
+            start = time.time()
+            print('Negative connectome score: '+str(int(NEGATIVE.activate(text))))
+            print('Negative connectome run time: '+str(time.time()-start)+'\n')
+
+        # positive connectome. 
+        def positive_connectome(text):
+            start=time.time()
+            print('Positive connectome score: '+str(int(POSITIVE.activate(text))))
+            print('Positive connectome run time: '+str(time.time()-start)+'\n')
+
+
         ROOTS=read_roots_file()
-        text=get_serial_number(text=" mabrouk yoyo bahri challah bel hne,",roots=ROOTS)
-        print('\nText ROOTS:\n')
-      
-        print('\n'+str(text))
-        start =time.time()
-        positive_network = izhikevich(network_path='negative_network.pkl')
-        positive_network.activate(text)
-        print(f"Runtime  is : {time.time() - start}")
+        # create positive connectome.
+        POSITIVE = SentimentAnalysis(first_net_path='positive_network.pkl',second_net_path='negative_network.pkl') 
+        # create negative connectome.
+        NEGATIVE = SentimentAnalysis(first_net_path='negative_network.pkl',second_net_path='positive_network.pkl')
 
 
-    if True:
-        N=1
-        pos_res =0
-        neg_res=0
+        # Enter your comment here comment = ......... 
+        comment=("bravo koulchi mbrouk alikem  :3 .")
+        print('\nYour comment "'+comment+'"\n')
+        comment_serial_number=get_serial_number(text=comment,roots=ROOTS)
 
-        positive_comments = read_comments_file('positive_comments.pkl')
-        negative_comments = read_comments_file('negative_comments.pkl')
-        
-        positive_network = SentimentAnalysis(first_net_path='positive_network.pkl',second_net_path='negative_network.pkl')    
-        negative_network = SentimentAnalysis(first_net_path='negative_network.pkl',second_net_path='positive_network.pkl')
-        print("nbr p c : "+str(len(positive_comments)-34641))
-        print("nbr n c : "+str(len(negative_comments)-21170))
-        #pos_list=random.sample(range(34641, len(positive_comments)), N)
-        #neg_list=random.sample(range(21170, len(negative_comments)), N)
-        # pos_list=[34661]
-        # neg_list=[27443]
-    
-        
-        pp=0
-        nn=0
+        # The comment belongs to the connectome with the highest score.
+        pos_thr = threading.Thread(target=positive_connectome, args=(comment_serial_number,))
+        pos_thr.start()
+        neg_thr = threading.Thread(target=negative_connectome, args=(comment_serial_number,))
+        neg_thr.start()
 
 
-    if False :
-        pos_list=[]
-        for i in range(34641,len(positive_comments)-1):
-            pos_list+=[i]
-
-                
-        i=0
-        for c in pos_list:
-            print('\ncomment '+str(i)+' :'+'\n')
-            i+=1
-            comment =positive_comments[c]
-            p=positive_network.activate(comment)
-            n=negative_network.activate(comment)
-            if p>n:
-                pos_res +=1
-                print(pos_res)
-                print('positive , '  + str(pos_res)+'/'+str(i) + ' , '+str((pos_res/i)*100)+'%')
-                if p < 10:
-                    pp+=1 
-                    
-
-            
-    if True:
-
-        neg_list=[]
-        for i in range(24739,25000):
-            neg_list+=[i]
-
-        i = 0
-        for c in neg_list:
-                print('\ncomment '+str(i)+' :'+'\n')
-                i+=1
-                comment =negative_comments[c]
-                n=negative_network.activate(comment)
-                p=positive_network.activate(comment)   
-                if n>p:
-                    neg_res +=1
-                    print('negative')
-                    print('positive , '  + str(neg_res)+'/'+str(i) + ' , '+str((neg_res/i)*100)+'%')
-                    if n <10:
-                        nn+=1
-
-
-        
-        print('positive :' +str((pos_res*100)/N)+'%  ,  '+str(pp))
-        print('negative :' +str((neg_res*100)/N)+'%  ,  '+str(nn))
-        
-        
-    
-        
+   
